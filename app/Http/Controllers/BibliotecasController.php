@@ -15,7 +15,7 @@ class BibliotecasController extends Controller
 
         $bibliotecas = Biblioteca::where('nome', 'like', '%' . $busca . '%')->get();
     
-        return response()->json($bibliotecas);
+        return view('bibliotecas.index', ['bibliotecas' => $bibliotecas]);
     }
 
     public function store(Request $request)
@@ -45,7 +45,6 @@ class BibliotecasController extends Controller
     {
         //
 
-    
         $created_by   = $request->input("created_by");
         $nome         = $request->input("nome");
         $endereco     = $request->input("endereco");
