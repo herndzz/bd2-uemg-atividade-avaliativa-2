@@ -7,6 +7,12 @@
 </div>
 @endif
 
+@if (session('error'))
+<div class="alert"></div>
+    {{ session('error') }}
+</div>
+@endif
+
 <a href="{{ route('bibliotecas.create') }}">Criar Nova Biblioteca</a>
 
 <table>
@@ -26,8 +32,10 @@
         @foreach ($bibliotecas as $biblioteca)
             <tr>
                 <td>{{ $biblioteca->id }}</td>
+                <td>
+                    <a href="{{ route('bibliotecas.edit', ['id' => $biblioteca->id]) }}">{{ $biblioteca->nome }}</a>
+                </td>
                 <td>{{ $biblioteca->creator->name }}</td>
-                <td>{{ $biblioteca->nome }}</td>
                 <td>{{ $biblioteca->endereco }}</td>
                 <td>{{ $biblioteca->telefone }}</td>
                 <td>{{ $biblioteca->email }}</td>

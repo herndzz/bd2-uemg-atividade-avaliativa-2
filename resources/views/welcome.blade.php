@@ -10,10 +10,9 @@
                     <p>Este app agora usa Material Design via Materialize, sem depender de Node ou build local.</p>
                 </div>
                 <div class="card-action">
-                    <a href="#">Entrar</a>
-                    @if (Route::has('register'))
-                        <a href="{{ route('register') }}">Registrar</a>
-                    @endif
+                    <p><a href="{{ route('bibliotecas.index') }}">Ver Bibliotecas</a></p>
+                    <p><a href="{{ route('users.index') }}">Ver Usuários</a></p>
+                    <p><a href="{{ route('pessoas.index') }}">Ver Pessoas</a></p>
                 </div>
             </div>
         </div>
