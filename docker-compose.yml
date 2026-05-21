@@ -12,4 +12,24 @@ services:
     ports:
       - "3307:3306"
     volumes:
+      - mysql_data:/var/lib/mysql
       - ./init-db:/docker-entrypoint-initdb.d
+
+  php:
+    build: .
+    container_name: php
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
+
+  composer:
+    image: composer
+    container_name: composer
+    working_dir: /app
+    volumes:
+      - ./:/app
+
+volumes:
+  mysql_data:

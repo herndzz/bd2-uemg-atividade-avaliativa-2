@@ -1,58 +1,280 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Atividade Avaliativa 2 - Banco de Dados II
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Objetivo
 
-## About Laravel
+Executar a aplicação Laravel, identificar as consultas SQL geradas pelo ORM (Eloquent), executar as consultas diretamente no MySQL e analisar possíveis problemas de desempenho e otimizações.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tecnologias utilizadas
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- Laravel
+- MySQL 8.4
+- Docker
+- Docker Compose
+- PHP 8.4
+- Composer
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+# Configuração do ambiente
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## docker-compose.yml
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+```yaml
+services:
 
-## Agentic Development
+  mysql:
+    image: mysql:8.4
+    container_name: db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: app_biblioteca
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: minhasenha
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db:/docker-entrypoint-initdb.d
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+  php:
+    build: .
+    container_name: php
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - "8000:8000"
 
-```bash
-composer require laravel/boost --dev
+  composer:
+    image: composer
+    container_name: composer
+    working_dir: /app
+    volumes:
+      - ./:/app
 
-php artisan boost:install
+volumes:
+  mysql_data:
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+---
 
-## Contributing
+## Dockerfile
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```dockerfile
+FROM php:8.4-cli
 
-## Code of Conduct
+RUN docker-php-ext-install pdo_mysql
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+WORKDIR /app
+```
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Configuração do .env
 
-## License
+```env
+DB_CONNECTION=mysql
+DB_HOST=mysql
+DB_PORT=3306
+DB_DATABASE=app_biblioteca
+DB_USERNAME=dev
+DB_PASSWORD=minhasenha
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+# Comandos utilizados
+
+## Subir containers
+
+```bash
+docker compose up -d --build
+```
+
+---
+
+## Instalar dependências
+
+```bash
+docker compose run --rm composer install
+```
+
+---
+
+## Gerar chave da aplicação
+
+```bash
+docker compose run --rm php php artisan key:generate
+```
+
+---
+
+## Executar migrations
+
+```bash
+docker compose run --rm php php artisan migrate
+```
+
+---
+
+## Popular banco de dados
+
+```bash
+docker compose run --rm php php artisan db:seed
+```
+
+---
+
+## Executar aplicação
+
+```bash
+docker compose run --rm -p 8000:8000 php php artisan serve --host=0.0.0.0
+```
+
+Aplicação disponível em:
+
+```text
+http://localhost:8000
+```
+
+---
+
+# Captura das consultas SQL
+
+Foi utilizado o Laravel Debugbar para visualizar as consultas SQL executadas pelo ORM.
+
+## Instalação da Debugbar
+
+```bash
+docker compose run --rm composer require barryvdh/laravel-debugbar --dev
+```
+
+---
+
+# Consulta analisada
+
+```sql
+select * from pessoas;
+```
+
+---
+
+## EXPLAIN
+
+```sql
+EXPLAIN select * from pessoas;
+```
+
+Resultado:
+
+```text
+type = ALL
+key = NULL
+rows = 11
+```
+
+---
+
+# Problemas identificados
+
+## Uso de SELECT *
+
+A consulta utiliza:
+
+```sql
+SELECT *
+```
+
+Problemas:
+
+- retorno de colunas desnecessárias
+- maior uso de memória
+- menor escalabilidade
+
+---
+
+## Full Table Scan
+
+O EXPLAIN apresentou:
+
+```text
+type = ALL
+```
+
+Indicando varredura completa da tabela.
+
+Neste caso o comportamento é esperado, pois não há cláusula WHERE.
+
+---
+
+# Possíveis otimizações
+
+## Selecionar apenas colunas necessárias
+
+Em vez de:
+
+```sql
+select * from pessoas;
+```
+
+Utilizar:
+
+```sql
+select id, nome, email from pessoas;
+```
+
+---
+
+## Otimização no Laravel
+
+Em vez de:
+
+```php
+Pessoa::all();
+```
+
+Utilizar:
+
+```php
+Pessoa::select('id', 'nome', 'email')->get();
+```
+
+---
+
+# Execução das consultas diretamente no MySQL
+
+## Acesso ao MySQL
+
+```bash
+docker exec -it db mysql -u dev -p
+```
+
+Senha:
+
+```text
+minhasenha
+```
+
+---
+
+## Selecionar banco
+
+```sql
+USE app_biblioteca;
+```
+
+---
+
+# Considerações finais
+
+A aplicação funcionou corretamente após configuração do ambiente Docker e ajustes no container PHP.
+
+A análise inicial mostrou:
+
+- consultas simples
+- ausência aparente de N+1 queries
+- possibilidade de otimização removendo SELECT *
+- uso do EXPLAIN para análise de desempenho
